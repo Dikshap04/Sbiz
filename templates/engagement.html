@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}Sbiz — Engagement Agent{% endblock %}
+{% block content %}
+<section class="wrap hr-unified">
+
+  <div class="u-card">
+    <div class="u-card-header">
+      <span class="u-step">Engagement</span>
+      <h2>Keep future hires excited before day one</h2>
+    </div>
+    <div class="u-card-body">
+      <p class="u-hint" style="margin-bottom:0;">
+        Select candidates from your HR pool, add their email and joining date, then let the agent draft
+        personalised, on-brand updates — offer confirmations, countdown notes, culture previews, and
+        pre-boarding check-ins — so they stay warm and excited right up to their start date, instead of
+        drifting toward a counter-offer.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── Step 1: select & configure candidates ── -->
+  <div class="u-card" id="eng-select-card">
+    <div class="u-card-header">
+      <span class="u-step">Step 1</span>
+      <h2>Select candidates <span class="u-count" id="eng-count">0 engaged</span></h2>
+    </div>
+    <div class="u-card-body">
+      {% if not candidates %}
+      <p class="u-hint">No candidates yet — upload and screen resumes on the <a href="{{ url_for('hr') }}">HR Agent</a> tab first.</p>
+      {% else %}
+      <p class="u-hint">Tick a candidate to start engaging them. Email is auto-filled from their resume where possible — double-check it before sending.</p>
+      <div class="eng-grid" id="eng-grid"></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Step 2: compose ── -->
+  <div class="u-card" id="eng-compose-card">
+    <div class="u-card-header">
+      <span class="u-step">Step 2</span>
+      <h2>Craft an update</h2>
+    </div>
+    <div class="u-card-body">
+      <select id="eng-cand-select" class="cand-select">
+        <option value="">— Engage a candidate above first —</option>
+      </select>
+
+      <p class="u-hint" style="margin-top:16px; margin-bottom:8px;">Update type</p>
+      <div class="suggestion-chips" id="eng-type-chips">
+        {% for t in update_types %}
+        <button type="button" class="chip" data-type="{{ t.id }}" title="{{ t.hint }}">{{ t.label }}</button>
+        {% endfor %}
+      </div>
+
+      <textarea id="eng-notes" class="eng-notes" rows="3" placeholder="Optional talking points — e.g. mention their Python background, the new ML team, a flexible start date…"></textarea>
+
+      <button class="u-btn primary" id="eng-generate-btn" disabled>✨ Generate draft</button>
+      <span class="u-status" id="eng-draft-status"></span>
+
+      <div class="draft-box" id="draft-box" hidden>
+        <label class="draft-label">Subject</label>
+        <input type="text" id="draft-subject" class="draft-subject">
+        <label class="draft-label">Message</label>
+        <textarea id="draft-body" class="draft-body" rows="10"></textarea>
+        <div class="draft-actions">
+          <button class="u-btn" id="draft-regenerate-btn">↻ Regenerate</button>
+          <button class="u-btn green" id="draft-send-btn">✉ Send update</button>
+        </div>
+        <span class="u-status" id="eng-send-status"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Timeline ── -->
+  <div class="u-card" id="eng-timeline-card">
+    <div class="u-card-header">
+      <span class="u-step">Timeline</span>
+      <h2>Engagement history</h2>
+      <button class="u-btn" id="eng-check-replies-btn">↻ Check for replies</button>
+    </div>
+    <div class="u-card-body">
+      <p class="u-status" id="eng-replies-status"></p>
+      <div id="eng-timeline">
+        <p class="u-hint">Select a candidate above to see the updates sent to them.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Export ── -->
+  <div class="u-card export-card">
+    <div class="u-card-header">
+      <span class="u-step">Export</span>
+      <h2>Download report</h2>
+    </div>
+    <div class="u-card-body">
+      <p class="u-hint">The HR report now includes a third sheet with the full engagement log — every update, subject line, and send time.</p>
+      <button class="u-btn green" id="eng-export-btn">↓ Download HR Report (.xlsx)</button>
+    </div>
+  </div>
+
+</section>
+
+<script id="candidates-data" type="application/json">{{ candidates | tojson }}</script>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/engagement.js') }}"></script>
+{% endblock %}

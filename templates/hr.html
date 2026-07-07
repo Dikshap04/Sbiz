@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Sbiz — HR Agent{% endblock %}
+{% block content %}
+<section class="wrap hr-unified">
+
+  <!-- ── Step 1: Position & PQs ── -->
+  <div class="u-card" id="setup-card">
+    <div class="u-card-header">
+      <span class="u-step">Step 1</span>
+      <h2>Position &amp; qualifications</h2>
+      <button class="u-toggle-btn" id="setup-toggle">▲ Collapse</button>
+    </div>
+    <div class="u-card-body" id="setup-body">
+      <div class="pos-grid">
+        <div class="pos-field"><label>Position #</label>
+          <input type="text" id="pos-number" placeholder="e.g. ASL DSA01" value="{{ position.number }}"></div>
+        <div class="pos-field"><label>Position Title</label>
+          <input type="text" id="pos-title" placeholder="e.g. Data Scientist" value="{{ position.title }}"></div>
+        <div class="pos-field"><label>Position Location</label>
+          <input type="text" id="pos-location" placeholder="e.g. Bengaluru" value="{{ position.location }}"></div>
+      </div>
+      <p class="u-hint">Define up to 6 preferred qualifications — Claude will auto-evaluate each resume against these.</p>
+      <div class="pq-grid">
+        {% for i in range(1, 7) %}
+        <div class="pq-field">
+          <label>PQ #{{ i }}</label>
+          <input type="text" id="pq{{ i }}" placeholder="e.g. MBBS degree" value="{{ pqs[i-1] }}">
+        </div>
+        {% endfor %}
+      </div>
+      <button class="u-btn primary" id="save-setup-btn">Save settings</button>
+      <span class="u-status" id="setup-status"></span>
+    </div>
+  </div>
+
+  <!-- ── Step 2: Upload ── -->
+  <div class="u-card" id="upload-card">
+    <div class="u-card-header">
+      <span class="u-step">Step 2</span>
+      <h2>Upload resumes <span class="u-count" id="upload-count">0 / 10</span></h2>
+    </div>
+    <div class="u-card-body">
+      <p class="u-hint">Select up to 10 files at once — they'll be screened one by one automatically.</p>
+      <label class="u-upload-label" id="bulk-upload-label">
+        Choose files (PDF, DOCX, TXT)
+        <input type="file" id="bulk-input" accept=".pdf,.docx,.txt" multiple>
+      </label>
+
+      <!-- Progress bar (hidden until upload starts) -->
+      <div class="u-progress-wrap" id="progress-wrap" hidden>
+        <div class="u-progress-bar" id="progress-bar" style="width:0%"></div>
+      </div>
+      <p class="u-status" id="upload-status"></p>
+
+      <!-- Candidate cards grid -->
+      <div class="cand-grid" id="cand-grid">
+        {% for cand in candidates %}
+        <div class="cand-card" data-id="{{ cand.id }}">
+          <div class="cand-card-top">
+            <span class="cand-name">{{ cand.name }}</span>
+            <button class="cand-remove" data-id="{{ cand.id }}">✕</button>
+          </div>
+          <div class="cand-meta">{{ cand.word_count }} words · {{ cand.filename }}</div>
+          <div class="cand-pqs">
+            <span class="pq-badge {{ 'yes' if cand.min_quals == 'Yes' else 'no' if cand.min_quals == 'No' else 'na' }}">Min: {{ cand.min_quals }}</span>
+            {% for pv in cand.pqs %}
+            <span class="pq-badge {{ 'yes' if pv == 'Yes' else 'no' if pv == 'No' else 'na' }}">PQ{{ loop.index }}: {{ pv }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Step 3: Chat ── -->
+  <div class="u-card" id="chat-card">
+    <div class="u-card-header">
+      <span class="u-step">Step 3</span>
+      <h2>Ask the HR agent</h2>
+      <!-- Mode toggle -->
+      <div class="mode-toggle" id="mode-toggle">
+        <button class="mode-btn active" data-mode="single">Single candidate</button>
+        <button class="mode-btn" data-mode="group">All candidates</button>
+      </div>
+    </div>
+    <div class="u-card-body">
+      <!-- Single mode: candidate selector -->
+      <div id="single-controls">
+        <select id="cand-select" class="cand-select">
+          <option value="">— Upload a resume first —</option>
+          {% for cand in candidates %}
+          <option value="{{ cand.id }}">{{ cand.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Chat thread -->
+      <div class="u-chat-thread" id="chat-thread">
+        <div class="chat-bubble assistant">Upload resumes above, then ask questions here. Switch to "All candidates" to compare or rank everyone at once.</div>
+      </div>
+
+      <!-- Suggestion chips -->
+      <div class="suggestion-chips" id="suggestion-chips">
+        <button class="chip" data-prompt="Summarise this candidate's experience in 3 bullet points.">Summarise experience</button>
+        <button class="chip" data-prompt="What skills or qualifications seem to be missing?">Spot skill gaps</button>
+        <button class="chip" data-prompt="Rank all candidates from strongest to weakest fit and explain why." data-mode="group">Rank all candidates</button>
+        <button class="chip" data-prompt="Which candidate best meets the preferred qualifications?" data-mode="group">Best PQ match</button>
+      </div>
+
+      <form id="chat-form" class="chat-form">
+        <input type="text" id="chat-input" placeholder="Ask about the resume(s)…" autocomplete="off" disabled>
+        <button type="submit" id="chat-send" disabled>Send</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── Export ── -->
+  <div class="u-card export-card" id="export-card">
+    <div class="u-card-header">
+      <span class="u-step">Export</span>
+      <h2>Download report</h2>
+    </div>
+    <div class="u-card-body">
+      <p class="u-hint">Downloads a single Excel file with two sheets: the Screening Summary and the full Chat Log.</p>
+      <button class="u-btn green" id="export-btn">↓ Download HR Report (.xlsx)</button>
+    </div>
+  </div>
+
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/hr.js') }}"></script>
+{% endblock %}

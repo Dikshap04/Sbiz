@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Sbiz — Home{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Small business, run smart</p>
+    <h1>One place to run the business — <span>and the people in it.</span></h1>
+    <p class="lede">Sbiz is a lightweight site for small teams: a public homepage out front, and an HR assistant in the back that actually reads resumes for you.</p>
+    <a class="cta" href="{{ url_for('hr_assistant') }}">Try the HR Assistant →</a>
+  </div>
+</section>
+
+<section class="wrap contact-block">
+  <h2>Get in touch</h2>
+  <form action="{{ url_for('submit') }}" method="post" class="contact-form">
+    <input type="text" name="name" placeholder="Your name" required>
+    <button type="submit">Send</button>
+  </form>
+</section>
+{% endblock %}

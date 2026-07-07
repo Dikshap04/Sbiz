@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Sbiz — HR Assistant{% endblock %}
+{% block content %}
+<section class="wrap hr-page">
+  <header class="hr-intro">
+    <p class="eyebrow">HR Assistant</p>
+    <h1>Read the resume. Ask anything.</h1>
+    <p class="lede">Upload one resume to ask questions about it, or add a second to compare two candidates side by side.</p>
+  </header>
+
+  <div class="resume-tabs">
+    <div class="resume-tab" data-slot="a">
+      <span class="tab-label">Candidate A</span>
+
+      <div class="tab-body" id="tab-a-empty" {% if resume_a %}hidden{% endif %}>
+        <p>PDF, DOCX, or TXT</p>
+        <label class="upload-btn">
+          Upload resume
+          <input type="file" accept=".pdf,.docx,.txt" data-slot="a" class="resume-input">
+        </label>
+      </div>
+
+      <div class="tab-body tab-filled" id="tab-a-filled" {% if not resume_a %}hidden{% endif %}>
+        <p class="filename">{{ resume_a.filename if resume_a }}</p>
+        <p class="meta"></p>
+        <button class="remove-btn" data-slot="a">Remove</button>
+      </div>
+    </div>
+
+    <div class="resume-tab" data-slot="b">
+      <span class="tab-label">Candidate B <em>(optional)</em></span>
+
+      <div class="tab-body" id="tab-b-empty" {% if resume_b %}hidden{% endif %}>
+        <p>Add a second resume to compare</p>
+        <label class="upload-btn">
+          Upload resume
+          <input type="file" accept=".pdf,.docx,.txt" data-slot="b" class="resume-input">
+        </label>
+      </div>
+
+      <div class="tab-body tab-filled" id="tab-b-filled" {% if not resume_b %}hidden{% endif %}>
+        <p class="filename">{{ resume_b.filename if resume_b }}</p>
+        <p class="meta"></p>
+        <button class="remove-btn" data-slot="b">Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="chat-panel">
+    <div class="chat-thread" id="chat-thread">
+      <div class="chat-bubble assistant">Upload a resume above, then ask me things like "what's their most recent role" or "do they have any cloud certifications."</div>
+    </div>
+
+    <div class="suggestion-chips" id="suggestion-chips">
+      <button type="button" class="chip" data-prompt="Summarize this candidate's experience in 3 bullet points.">Summarize experience</button>
+      <button type="button" class="chip" data-prompt="What skills or qualifications seem to be missing?">Spot skill gaps</button>
+      <button type="button" class="chip" data-prompt="Compare these two candidates — strengths, gaps, and overall fit.">Compare candidates</button>
+    </div>
+
+    <form id="chat-form" class="chat-form">
+      <input type="text" id="chat-input" placeholder="Ask about the resume…" autocomplete="off" {% if not resume_a %}disabled{% endif %}>
+      <button type="submit" id="chat-send" {% if not resume_a %}disabled{% endif %}>Send</button>
+    </form>
+  </div>
+
+  <div class="export-bar" id="export-bar" hidden>
+    <button type="button" id="export-btn" class="export-btn">↓ Export conversation to Excel</button>
+    <span class="export-hint">Downloads a formatted .xlsx record of this session</span>
+  </div>
+
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/hr-assistant.js') }}"></script>
+{% endblock %}

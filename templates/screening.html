@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Sbiz — Screening Sheet{% endblock %}
+{% block content %}
+<section class="wrap screening-page">
+
+  <header class="hr-intro">
+    <p class="eyebrow">Applicant Screening</p>
+    <h1>Build your screening sheet.</h1>
+    <p class="lede">Set the position details and up to 6 preferred qualifications, then upload each candidate's resume. Claude evaluates every PQ automatically and fills the sheet.</p>
+  </header>
+
+  {# ── Step 1: Position setup ── #}
+  <div class="sc-card" id="setup-card">
+    <h2 class="sc-step">Step 1 — Position details &amp; qualifications</h2>
+
+    <div class="pos-grid">
+      <div class="pos-field">
+        <label>Position #</label>
+        <input type="text" id="pos-number" placeholder="e.g. ASL DSA01" value="{{ position.number }}">
+      </div>
+      <div class="pos-field">
+        <label>Position Title</label>
+        <input type="text" id="pos-title" placeholder="e.g. Data Scientist" value="{{ position.title }}">
+      </div>
+      <div class="pos-field">
+        <label>Position Location</label>
+        <input type="text" id="pos-location" placeholder="e.g. Bengaluru" value="{{ position.location }}">
+      </div>
+    </div>
+
+    <div class="pq-grid">
+      {% for i in range(1, 7) %}
+      <div class="pq-field">
+        <label>PQ #{{ i }}</label>
+        <input type="text" id="pq{{ i }}" placeholder="e.g. MBBS degree" value="{{ pqs[i-1] }}">
+      </div>
+      {% endfor %}
+    </div>
+
+    <button class="sc-btn primary" id="save-setup-btn">Save &amp; go to Step 2</button>
+    <span class="sc-hint" id="setup-status"></span>
+  </div>
+
+  {# ── Step 2: Upload candidates ── #}
+  <div class="sc-card" id="upload-card">
+    <h2 class="sc-step">Step 2 — Upload candidate resumes</h2>
+    <p class="sc-desc">Each resume is screened against your PQs automatically. Upload one at a time.</p>
+
+    <label class="upload-btn" id="sc-upload-label">
+      Upload resume (PDF, DOCX, TXT)
+      <input type="file" id="sc-resume-input" accept=".pdf,.docx,.txt">
+    </label>
+    <span class="sc-hint" id="upload-status"></span>
+
+    {# ── Candidates table ── #}
+    <div id="candidates-table-wrap" {% if not candidates %}hidden{% endif %} style="margin-top:24px; overflow-x:auto;">
+      <table class="cand-table" id="candidates-table">
+        <thead>
+          <tr>
+            <th>Applicant Name</th>
+            <th>Min Quals</th>
+            <th>PQ #1</th><th>PQ #2</th><th>PQ #3</th>
+            <th>PQ #4</th><th>PQ #5</th><th>PQ #6</th>
+            <th>Total PQs</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="candidates-tbody">
+          {% for cand in candidates %}
+          <tr data-index="{{ loop.index0 }}">
+            <td>{{ cand.name }}</td>
+            <td class="{{ 'yes' if cand.min_quals == 'Yes' else 'no' }}">{{ cand.min_quals }}</td>
+            {% for pq_val in cand.pqs %}
+            <td class="{{ 'yes' if pq_val == 'Yes' else ('no' if pq_val == 'No' else '') }}">{{ pq_val }}</td>
+            {% endfor %}
+            {% for _ in range(6 - cand.pqs|length) %}<td></td>{% endfor %}
+            {% set yes_count = namespace(value=0) %}
+            {% for pq_val in cand.pqs %}{% if pq_val == 'Yes' %}{% set yes_count.value = yes_count.value + 1 %}{% endif %}{% endfor %}
+            <td>{{ yes_count.value }}</td>
+            <td><button class="remove-cand-btn" data-index="{{ loop.index0 }}">✕</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {# ── Step 3: Export ── #}
+  <div class="sc-card" id="export-card">
+    <h2 class="sc-step">Step 3 — Export</h2>
+    <p class="sc-desc">Downloads a formatted Excel sheet matching the Applicant Screening Summary Sheet template.</p>
+    <button class="sc-btn green" id="sc-export-btn">↓ Download Screening Sheet (.xlsx)</button>
+  </div>
+
+</section>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/screening.js') }}"></script>
+{% endblock %}
